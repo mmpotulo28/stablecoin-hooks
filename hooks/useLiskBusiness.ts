@@ -6,7 +6,7 @@ import {
 	iPendingTx,
 	iPendingTxResponse,
 	iUserTokenBalance,
-} from "../types"; // changed from "@/types/"
+} from "../types";
 import { useCache } from "../hooks/useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 

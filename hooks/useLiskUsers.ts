@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { iUser } from "../types"; // changed from "@/types"
+import { iUser } from "../types";
 import { useCache } from "./useCache";
 
 // Use environment variables
