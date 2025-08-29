@@ -1,0 +1,22 @@
+{
+ "name": "@mmpotulo/stablecoin-hooks",
+ "version": "1.0.5",
+ "description": "React hooks for stablecoin operations",
+ "main": "dist/index.js",
+ "types": "dist/index.d.ts",
+ "files": [
+  "dist"
+ ],
+ "scripts": {
+  "build": "tsc"
+ },
+ "author": "mmpotulo",
+ "license": "MIT",
+ "peerDependencies": {
+  "react": "^18.0.0"
+ },
+ "dependencies": {
+  "axios": "^1.11.0",
+  "js-cookie": "^3.0.5"
+ }
+}
