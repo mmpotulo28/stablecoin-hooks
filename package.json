@@ -1,6 +1,6 @@
 {
  "name": "@mmpotulo/stablecoin-hooks",
- "version": "1.0.6",
+ "version": "1.0.9",
  "description": "React hooks for stablecoin operations",
  "main": "dist/index.js",
  "types": "dist/index.d.ts",
@@ -8,7 +8,8 @@
   "dist"
  ],
  "scripts": {
-  "build": "tsc"
+  "build": "tsc",
+  "publish": "npm publish --access public"
  },
  "author": "mmpotulo",
  "license": "MIT",
