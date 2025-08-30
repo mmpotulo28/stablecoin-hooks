@@ -1,7 +1,7 @@
 {
  "name": "@mmpotulo/stablecoin-hooks",
- "version": "1.0.9",
- "description": "React hooks for stablecoin operations",
+ "version": "1.1.0",
+ "description": "React hooks for stablecoin operations build on top of the lisk stablecoin Api",
  "main": "dist/index.js",
  "types": "dist/index.d.ts",
  "files": [
