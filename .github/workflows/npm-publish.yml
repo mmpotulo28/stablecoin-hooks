@@ -36,7 +36,6 @@ jobs:
               with:
                   name: dist
                   path: dist/
-            - run: npm ci
             - run: npm publish --access public
               env:
                   NODE_AUTH_TOKEN: ${{secrets.npm_token}}
