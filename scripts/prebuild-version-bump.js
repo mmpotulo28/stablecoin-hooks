@@ -1,6 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 
+// delete prev dist folder
+const distPath = path.resolve(__dirname, "../dist");
+if (fs.existsSync(distPath)) {
+	fs.rmSync(distPath, { recursive: true });
+}
+
 const pkgPath = path.resolve(__dirname, "../package.json");
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
