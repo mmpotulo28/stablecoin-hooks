@@ -10,7 +10,7 @@ export interface iUseLiskCharges {
 	chargesLoading: boolean;
 	chargesError: string | undefined;
 	chargesMessage: string | undefined;
-	fetchCharges: (userId: string) => Promise<iCharge[] | void>;
+	fetchCharges: (userId: string, purge?: boolean) => Promise<iCharge[] | void>;
 
 	// get charges
 	charge: iCharge | undefined;

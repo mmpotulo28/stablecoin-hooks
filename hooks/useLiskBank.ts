@@ -22,7 +22,7 @@ export interface iUseLiskBank {
 		branchCode: string;
 		bankName: string;
 	}) => Promise<iBankAccountResponse | undefined>;
-	getBankAccount: (userId: string) => Promise<iBankAccount | undefined>;
+	getBankAccount: (userId: string, purge?: boolean) => Promise<iBankAccount | undefined>;
 	deleteBankAccount: (userId: string) => Promise<{ message: string } | undefined>;
 
 	createTransaction: (

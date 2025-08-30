@@ -7,7 +7,7 @@ export interface iUseLiskTransfer {
 	recipient: any;
 	recipientLoading: boolean;
 	recipientError: string | undefined;
-	fetchRecipient: (id: string) => Promise<any>;
+	fetchRecipient: (id: string, purge?: boolean) => Promise<any>;
 	recipientMessage: string | undefined;
 
 	transferLoading: boolean;

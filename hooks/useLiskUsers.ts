@@ -12,7 +12,7 @@ export interface iUseLiskUsers {
 	usersLoading: boolean;
 	usersError: string | undefined;
 	usersMessage: string | undefined;
-	fetchUsers: () => Promise<iUser[]>;
+	fetchUsers: (purge?: boolean) => Promise<iUser[]>;
 
 	getUser: ({ id }: { id: string }) => Promise<iUser | null>;
 	getUserLoading: boolean;

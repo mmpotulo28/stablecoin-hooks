@@ -8,7 +8,7 @@ export interface iUseLiskBalances {
 	balances: iUserTokenBalance[];
 	balancesLoading: boolean;
 	balancesError: string | undefined;
-	fetchBalances: (userId: string) => Promise<iUserTokenBalance[]>;
+	fetchBalances: (userId: string, purge?: boolean) => Promise<iUserTokenBalance[]>;
 	balancesMessage: string | undefined;
 }
 

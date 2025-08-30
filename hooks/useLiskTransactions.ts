@@ -9,7 +9,7 @@ export interface iUseLiskTransactions {
 	transactionsLoading: boolean;
 	transactionsError: string | undefined;
 	transactionsMessage: string | undefined;
-	fetchTransactions: (userId: string) => Promise<iTransaction[]>;
+	fetchTransactions: (userId: string, purge?: boolean) => Promise<iTransaction[]>;
 
 	transaction: iTransaction | undefined;
 	transactionLoading: boolean;

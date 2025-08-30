@@ -9,7 +9,7 @@ export interface iUseLiskStaff {
 	staffLoading: boolean;
 	staffError: string | undefined;
 	staffMessage: string | undefined;
-	fetchStaff: (merchantId: string) => Promise<iStaffMember[]>;
+	fetchStaff: (merchantId: string, purge?: boolean) => Promise<iStaffMember[]>;
 
 	assignStaff: (merchantId: string, input: string) => Promise<iStaffAssignResponse | undefined>;
 	assignStaffLoading: boolean;

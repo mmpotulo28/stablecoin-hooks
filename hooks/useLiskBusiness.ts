@@ -15,7 +15,7 @@ export interface iUseBusiness {
 	loadingFloat: boolean;
 	floatError: string | undefined;
 	floatMessage: string | undefined;
-	fetchFloat: () => Promise<iUserTokenBalance[]>;
+	fetchFloat: (purge?: boolean) => Promise<iUserTokenBalance[]>;
 
 	gasLoading: boolean;
 	gasMessage: string | undefined;

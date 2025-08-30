@@ -10,7 +10,7 @@ export interface iUseLiskApiTokens {
 	apiTokenLoading: boolean;
 	apiTokenError: string | undefined;
 	apiTokenMessage: string | undefined;
-	fetchTokens: () => Promise<void>;
+	fetchTokens: (purge?: boolean) => Promise<void>;
 
 	createToken: (description: string) => Promise<void>;
 	createTokenLoading: boolean;

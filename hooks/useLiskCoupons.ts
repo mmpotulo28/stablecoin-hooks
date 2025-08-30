@@ -8,7 +8,7 @@ export interface iUseLiskCoupons {
 	coupons: iCoupon[];
 	couponsLoading: boolean;
 	couponsError: string | undefined;
-	fetchCoupons: () => Promise<void>;
+	fetchCoupons: (purge?: boolean) => Promise<void>;
 
 	createCoupon: (
 		userId: string,
