@@ -11,8 +11,8 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: 20
-            - name: Increment package version
-              run: npm version patch --no-git-tag-version
+            - name: Prebuild version bump
+              run: node scripts/prebuild-version-bump.js
             - run: npm ci
             - name: Build Dist
               run: npm run build
