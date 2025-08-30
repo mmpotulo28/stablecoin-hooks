@@ -187,7 +187,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 				const { data } = await axios.post(
 					`${API_BASE}/transfer/batch/${userId}`,
 					{
-						payments,
+						...payments,
 						transactionNotes,
 					},
 					{
