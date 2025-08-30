@@ -54,7 +54,7 @@ export interface iUseLiskApiTokens {
  * - `revokeTokenSuccess`: Success message for revoking a token.
  */
 export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTokens {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	const [tokens, setTokens] = useState<iApiToken[]>([]);
 	const [apiTokenLoading, setApiTokenLoading] = useState(false);
@@ -110,33 +110,39 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 		revokeTokenMessage,
 	]);
 
-	const fetchTokens = useCallback(async () => {
-		const cacheKey = "api_tokens";
-		setApiTokenLoading(true);
-		setApiTokenError(undefined);
-		try {
-			const cached = getCache(cacheKey);
-			if (cached) {
-				setTokens(cached);
-				setApiTokenLoading(false);
-				return;
-			}
+	const fetchTokens = useCallback(
+		async (purge?: boolean) => {
+			const cacheKey = "api_tokens";
+			setApiTokenLoading(true);
+			setApiTokenError(undefined);
 
-			const { data } = await axios.get<iApiToken[]>(`${API_BASE}/tokens`, {
-				headers: {
-					Authorization: apiKey,
-				},
-			});
-			setTokens(data);
-			setCache(cacheKey, data);
-			setApiTokenMessage("Tokens fetched successfully.");
-		} catch (err: any) {
-			setApiTokenError("Failed to fetch tokens.");
-			console.error("Error fetching tokens:", err);
-		} finally {
-			setApiTokenLoading(false);
-		}
-	}, [apiKey, getCache, setCache]);
+			try {
+				if (purge) purgeCache(cacheKey);
+
+				const cached = getCache(cacheKey);
+				if (cached) {
+					setTokens(cached);
+					setApiTokenLoading(false);
+					return;
+				}
+
+				const { data } = await axios.get<iApiToken[]>(`${API_BASE}/tokens`, {
+					headers: {
+						Authorization: `Bearer ${apiKey}`,
+					},
+				});
+				setTokens(data);
+				setCache(cacheKey, data);
+				setApiTokenMessage("Tokens fetched successfully.");
+			} catch (err: any) {
+				setApiTokenError("Failed to fetch tokens.");
+				console.error("Error fetching tokens:", err);
+			} finally {
+				setApiTokenLoading(false);
+			}
+		},
+		[apiKey, getCache, setCache, purgeCache],
+	);
 
 	const createToken = useCallback(
 		async (description: string) => {
@@ -150,7 +156,7 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -178,7 +184,7 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -206,7 +212,7 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);

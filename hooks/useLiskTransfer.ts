@@ -40,7 +40,7 @@ export interface iUseLiskTransfer {
 }
 
 export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransfer {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	const [recipient, setRecipient] = useState<any>(undefined);
 	const [recipientLoading, setRecipientLoading] = useState(false);
@@ -80,7 +80,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 
 	// Fetch recipient details by payment identifier or email
 	const fetchRecipient = useCallback(
-		async (id: string) => {
+		async (id: string, purge?: boolean) => {
 			setRecipientLoading(true);
 			setRecipientError(undefined);
 			setRecipientMessage(undefined);
@@ -88,6 +88,8 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 
 			const cacheKey = `recipient_${id}`;
 			try {
+				if (purge) purgeCache(cacheKey);
+
 				const cached = getCache(cacheKey);
 				if (cached) {
 					setRecipient(cached);
@@ -96,7 +98,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 				}
 
 				const { data } = await axios.get(`${API_BASE}/recipient/${id}`, {
-					headers: { Authorization: apiKey },
+					headers: { Authorization: `Bearer ${apiKey}` },
 				});
 				setRecipient(data);
 				setCache(cacheKey, data);
@@ -116,7 +118,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 				setRecipientLoading(false);
 			}
 		},
-		[apiKey, getCache, setCache],
+		[apiKey, getCache, setCache, purgeCache],
 	);
 
 	// Single transfer
@@ -146,7 +148,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -191,7 +193,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);

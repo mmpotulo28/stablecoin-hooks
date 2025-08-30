@@ -39,7 +39,7 @@ export interface iUseLiskCoupons {
 }
 
 export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	const [coupons, setCoupons] = useState<iCoupon[]>([]);
 	const [couponsLoading, setCouponsLoading] = useState(false);
@@ -96,30 +96,34 @@ export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons
 	]);
 
 	// Get all coupons
-	const fetchCoupons = useCallback(async () => {
-		setCouponsLoading(true);
-		setCouponsError(undefined);
-		const cacheKey = `coupons`;
-		try {
-			const cached = getCache(cacheKey);
-			if (cached) {
-				setCoupons(cached);
-				setCouponsLoading(false);
-				return;
-			}
+	const fetchCoupons = useCallback(
+		async (purge?: boolean) => {
+			setCouponsLoading(true);
+			setCouponsError(undefined);
+			const cacheKey = `coupons`;
+			try {
+				if (purge) purgeCache(cacheKey);
+				const cached = getCache(cacheKey);
+				if (cached) {
+					setCoupons(cached);
+					setCouponsLoading(false);
+					return;
+				}
 
-			const { data } = await axios.get<iCoupon[]>(`${API_BASE}/coupons`, {
-				headers: { Authorization: apiKey },
-			});
-			setCoupons(data);
-			setCache(cacheKey, data);
-		} catch (err: any) {
-			setCouponsError("Failed to fetch coupons.");
-			console.error(err);
-		} finally {
-			setCouponsLoading(false);
-		}
-	}, [apiKey, getCache, setCache]);
+				const { data } = await axios.get<iCoupon[]>(`${API_BASE}/coupons`, {
+					headers: { Authorization: `Bearer ${apiKey}` },
+				});
+				setCoupons(data);
+				setCache(cacheKey, data);
+			} catch (err: any) {
+				setCouponsError("Failed to fetch coupons.");
+				console.error(err);
+			} finally {
+				setCouponsLoading(false);
+			}
+		},
+		[apiKey, getCache, setCache, purgeCache],
+	);
 
 	// Create a new coupon for a user
 	const createCoupon = useCallback(
@@ -134,7 +138,7 @@ export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -164,7 +168,7 @@ export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -189,12 +193,14 @@ export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons
 			setUpdateCouponMessage(undefined);
 			try {
 				const { data } = await axios.put<iCouponResponse>(
-					`${API_BASE}/coupons/${encodeURIComponent(userId)}/${encodeURIComponent(couponId)}`,
+					`${API_BASE}/coupons/${encodeURIComponent(userId)}/${encodeURIComponent(
+						couponId,
+					)}`,
 					coupon,
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -219,10 +225,12 @@ export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons
 			setDeleteCouponMessage(undefined);
 			try {
 				await axios.delete(
-					`${API_BASE}/coupons/${encodeURIComponent(userId)}/${encodeURIComponent(couponId)}`,
+					`${API_BASE}/coupons/${encodeURIComponent(userId)}/${encodeURIComponent(
+						couponId,
+					)}`,
 					{
 						headers: {
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);

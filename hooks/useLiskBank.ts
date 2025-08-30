@@ -77,7 +77,7 @@ export interface iUseLiskBank {
  * - `depositMessage`: Success message for deposit operations.
  */
 export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): iUseLiskBank {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	// bank account state
 	const [bankAccount, setBankAccount] = useState<iBankAccount | undefined>(undefined);
@@ -129,7 +129,7 @@ export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): i
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -148,11 +148,13 @@ export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): i
 	);
 
 	const getBankAccount = useCallback(
-		async (userId: string) => {
+		async (userId: string, purge?: boolean) => {
 			setBankLoading(true);
 			setBankError(undefined);
 			const cacheKey = `bank_account_${userId}`;
 			try {
+				if (purge) purgeCache(cacheKey);
+
 				const cached = getCache(cacheKey);
 				if (cached) {
 					setBankAccount(cached);
@@ -164,7 +166,7 @@ export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): i
 					`${API_BASE}/bank/${encodeURIComponent(userId)}`,
 					{
 						headers: {
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -182,7 +184,7 @@ export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): i
 				setBankLoading(false);
 			}
 		},
-		[apiKey, getCache, setCache],
+		[apiKey, getCache, setCache, purgeCache],
 	);
 
 	const deleteBankAccount = useCallback(
@@ -194,7 +196,7 @@ export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): i
 					`${API_BASE}/bank/${encodeURIComponent(userId)}`,
 					{
 						headers: {
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -241,7 +243,7 @@ export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): i
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);

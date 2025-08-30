@@ -22,7 +22,7 @@ export interface iUseLiskTransactions {
 }
 
 export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTransactions {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	const [transactions, setTransactions] = useState<iTransaction[]>([]);
 	const [transactionsLoading, setTransactionsLoading] = useState(false);
@@ -48,13 +48,15 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 	}, [transactionsError, transactionError, transactionsMessage, transactionMessage]);
 
 	const fetchTransactions = useCallback(
-		async (userId: string) => {
+		async (userId: string, purge?: boolean) => {
 			setTransactionsLoading(true);
 			setTransactionsError(undefined);
 			setTransactionsMessage(undefined);
 
 			const cacheKey = `user_transactions_${userId}`;
 			try {
+				if (purge) purgeCache(cacheKey);
+
 				const cached = getCache<iTransaction[]>(cacheKey);
 				if (cached) {
 					setTransactions(cached);
@@ -64,7 +66,7 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 
 				const { data } = await axios.get<{ transactions: iTransaction[] }>(
 					`${API_BASE}/${userId}/transactions`,
-					{ headers: { Authorization: apiKey } },
+					{ headers: { Authorization: `Bearer ${apiKey}` } },
 				);
 				setTransactions(data.transactions || []);
 				if (data.transactions) setCache(cacheKey, data.transactions);
@@ -81,7 +83,7 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 
 			return [];
 		},
-		[apiKey, getCache, setCache],
+		[apiKey, getCache, setCache, purgeCache],
 	);
 
 	const fetchSingleTransaction = useCallback(
@@ -94,7 +96,7 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 			try {
 				const { data } = await axios.get<iTransaction | undefined>(
 					`${API_BASE}/${userId}/transactions/${transactionId}`,
-					{ headers: { Authorization: apiKey } },
+					{ headers: { Authorization: `Bearer ${apiKey}` } },
 				);
 				setTransaction(data);
 				setTransactionMessage("Fetched transaction successfully.");

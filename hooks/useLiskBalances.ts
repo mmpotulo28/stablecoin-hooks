@@ -28,7 +28,7 @@ export interface iUseLiskBalances {
  *   - fetchBalances: Function to fetch balances for a given user ID.
  */
 export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalances {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 	const [balances, setBalances] = useState<iUserTokenBalance[]>([]);
 	const [balancesLoading, setBalancesLoading] = useState(false);
 	const [balancesError, setBalancesError] = useState<string | undefined>(undefined);
@@ -45,11 +45,12 @@ export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalanc
 	}, [balancesError, balancesMessage]);
 
 	const fetchBalances = useCallback(
-		async (userId: string) => {
+		async (userId: string, purge?: boolean) => {
 			setBalancesLoading(true);
 			setBalancesError(undefined);
 			const cacheKey = `user_balances_${userId}`;
 			try {
+				if (purge) purgeCache(cacheKey);
 				const cached = getCache(cacheKey);
 				if (cached) {
 					setBalances(cached);
@@ -61,7 +62,7 @@ export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalanc
 					`${API_BASE}/${userId}/balance`,
 					{
 						headers: {
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -80,7 +81,7 @@ export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalanc
 
 			return [];
 		},
-		[apiKey, getCache, setCache],
+		[apiKey, getCache, setCache, purgeCache],
 	);
 
 	return {

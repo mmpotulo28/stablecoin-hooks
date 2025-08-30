@@ -38,7 +38,7 @@ export interface iUseLiskUsers {
 }
 
 export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	// users states
 	const [users, setUsers] = useState<iUser[]>([]);
@@ -105,36 +105,41 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 		deleteUserMessage,
 	]);
 
-	const fetchUsers = useCallback(async () => {
-		setUsersLoading(true);
-		setUsersError(undefined);
-		setUsersMessage(undefined);
-		const cacheKey = "users_list";
+	const fetchUsers = useCallback(
+		async (purge?: boolean) => {
+			setUsersLoading(true);
+			setUsersError(undefined);
+			setUsersMessage(undefined);
+			const cacheKey = "users_list";
 
-		try {
-			const cached = getCache(cacheKey);
-			if (cached) {
-				setUsers(cached);
+			try {
+				if (purge) purgeCache(cacheKey);
+
+				const cached = getCache(cacheKey);
+				if (cached) {
+					setUsers(cached);
+					setUsersLoading(false);
+					setUsersMessage("Fetched users from cache.");
+					return cached;
+				}
+
+				const { data } = await axios.get<{ users: iUser[] }>(`${API_BASE}/users`, {
+					headers: { Authorization: `Bearer ${apiKey}` },
+				});
+				setUsers(data.users || []);
+				setCache(cacheKey, data.users || []);
+				setUsersMessage("Fetched users successfully.");
+				return data.users || [];
+			} catch (err: any) {
+				setUsersError(err?.response?.data?.message || "Failed to fetch users");
+			} finally {
 				setUsersLoading(false);
-				setUsersMessage("Fetched users from cache.");
-				return cached;
 			}
 
-			const { data } = await axios.get<{ users: iUser[] }>(`${API_BASE}/users`, {
-				headers: { Authorization: apiKey },
-			});
-			setUsers(data.users || []);
-			setCache(cacheKey, data.users || []);
-			setUsersMessage("Fetched users successfully.");
-			return data.users || [];
-		} catch (err: any) {
-			setUsersError(err?.response?.data?.message || "Failed to fetch users");
-		} finally {
-			setUsersLoading(false);
-		}
-
-		return [];
-	}, [apiKey, getCache, setCache]);
+			return [];
+		},
+		[apiKey, getCache, setCache, purgeCache],
+	);
 
 	const getUser = useCallback(
 		async ({ id }: { id: string }) => {
@@ -158,7 +163,7 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 				}
 
 				const { data } = await axios.get<{ user: iUser }>(`${API_BASE}/users/${id}`, {
-					headers: { Authorization: apiKey },
+					headers: { Authorization: `Bearer ${apiKey}` },
 				});
 				setSingleUser(data.user);
 				setGetUserMessage("Fetched user successfully.");
@@ -182,7 +187,7 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 
 			try {
 				const { data: response } = await axios.post(`${API_BASE}/users`, data, {
-					headers: { Authorization: apiKey },
+					headers: { Authorization: `Bearer ${apiKey}` },
 				});
 				setSingleUser(response);
 				setCreateUserMessage("User created successfully.");
@@ -211,7 +216,7 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -242,7 +247,7 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 					`${API_BASE}/users/${encodeURIComponent(id)}`,
 					{
 						headers: {
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);

@@ -96,7 +96,7 @@ export interface iUseLiskCharges {
  * - `completeChargeLoading`: Loading state for completing a charge.
  */
 export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any }): iUseLiskCharges {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 	const { makeTransfer, transferError } = useLiskTransfer({ apiKey });
 
 	const [charges, setCharges] = useState<iCharge[]>([]);
@@ -198,7 +198,7 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 				{
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: apiKey,
+						Authorization: `Bearer ${apiKey}`,
 					},
 				},
 			);
@@ -218,11 +218,13 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 
 	// Get all charges for a user
 	const fetchCharges = useCallback(
-		async (userId: string) => {
+		async (userId: string, purge?: boolean) => {
 			setChargesLoading(true);
 			setChargesError(undefined);
 			const cacheKey = `user_charges_${userId}`;
 			try {
+				if (purge) purgeCache(cacheKey);
+
 				const cached = getCache(cacheKey);
 				if (cached) {
 					setCharges(cached);
@@ -233,7 +235,7 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 				console.log("fetching charges", apiKey);
 				const { data } = await axios.get<{ charges: iCharge[] }>(
 					`${API_BASE}/charge/${userId}`,
-					{ headers: { Authorization: apiKey } },
+					{ headers: { Authorization: `Bearer ${apiKey}` } },
 				);
 				setCharges(data.charges || []);
 				setCache(cacheKey, data.charges || []);
@@ -247,7 +249,7 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 				setChargesLoading(false);
 			}
 		},
-		[apiKey, getCache, setCache],
+		[apiKey, getCache, setCache, purgeCache],
 	);
 
 	// Get a specific charge by chargeId
@@ -260,7 +262,7 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 				const { data } = await axios.get<{ charge: iCharge }>(
 					`${API_BASE}/retrieve-charge/${chargeId}`,
 					{
-						headers: { Authorization: apiKey },
+						headers: { Authorization: `Bearer ${apiKey}` },
 					},
 				);
 
@@ -304,7 +306,7 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -333,7 +335,7 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 			try {
 				const { data } = await axios.delete<{ message: string }>(
 					`${API_BASE}/charge/${userId}/${chargeId}/delete`,
-					{ headers: { Authorization: apiKey } },
+					{ headers: { Authorization: `Bearer ${apiKey}` } },
 				);
 				setDeleteChargeMessage("Deleted charge successfully.");
 				return data;
@@ -385,10 +387,12 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 				console.log("Updating charge status to COMPLETE", charge.id);
 				const updateRes = await axios.request({
 					method: "PUT",
-					url: `https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(user?.id || "")}/${encodeURIComponent(charge.id)}/update`,
+					url: `https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(
+						user?.id || "",
+					)}/${encodeURIComponent(charge.id)}/update`,
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: apiKey,
+						Authorization: `Bearer ${apiKey}`,
 					},
 					data: { status: "COMPLETE" },
 				});

@@ -23,7 +23,7 @@ export interface iUseLiskStaff {
 }
 
 export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	// fetchStaff states
 	const [staff, setStaff] = useState<iStaffMember[]>([]);
@@ -65,12 +65,13 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 	]);
 
 	const fetchStaff = useCallback(
-		async (merchantId: string) => {
+		async (merchantId: string, purge?: boolean) => {
 			setStaffLoading(true);
 			setStaffError(undefined);
 			setStaffMessage(undefined);
 			const cacheKey = `staff_list_${merchantId}`;
 			try {
+				if (purge) purgeCache(cacheKey);
 				const cached = getCache(cacheKey);
 				if (cached) {
 					setStaff(cached);
@@ -81,7 +82,7 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 
 				const { data } = await axios.get<iStaffMember[]>(
 					`${API_BASE}/staff/${encodeURIComponent(merchantId)}`,
-					{ headers: { Authorization: apiKey } },
+					{ headers: { Authorization: `Bearer ${apiKey}` } },
 				);
 				setStaff(data);
 				setCache(cacheKey, data);
@@ -95,7 +96,7 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 
 			return [];
 		},
-		[apiKey, getCache, setCache],
+		[apiKey, getCache, setCache, purgeCache],
 	);
 
 	const assignStaff = useCallback(
@@ -110,7 +111,7 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
@@ -135,10 +136,12 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 			setRemoveStaffMessage(undefined);
 			try {
 				const { data } = await axios.delete<iStaffRemoveResponse>(
-					`${API_BASE}/staff/${encodeURIComponent(merchantId)}/${encodeURIComponent(staffId)}`,
+					`${API_BASE}/staff/${encodeURIComponent(merchantId)}/${encodeURIComponent(
+						staffId,
+					)}`,
 					{
 						headers: {
-							Authorization: apiKey,
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);

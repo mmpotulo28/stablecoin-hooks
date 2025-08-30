@@ -83,7 +83,7 @@ export interface iUseBusiness {
  * It handles API communication, caching, and state management for common business operations.
  */
 export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, purgeCache } = useCache();
 
 	const [float, setFloat] = useState<iUserTokenBalance[]>([]);
 	const [loadingFloat, setLoadingFloat] = useState(false);
@@ -143,36 +143,45 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 	]);
 
 	// Fetch float balances
-	const fetchFloat = useCallback(async () => {
-		setLoadingFloat(true);
-		setFloatError(undefined);
-		if (apiKey) return;
+	const fetchFloat = useCallback(
+		async (purge?: boolean) => {
+			const cacheKey = "float_balances";
+			setLoadingFloat(true);
+			setFloatError(undefined);
+			if (apiKey) return;
 
-		const cacheKey = "float_balances";
-		const cached = getCache(cacheKey);
-		if (cached) {
-			setFloat(cached);
-			setLoadingFloat(false);
-			return cached;
-		}
+			try {
+				if (purge) purgeCache(cacheKey);
 
-		try {
-			const { data } = await axios.get<{ tokens: iUserTokenBalance[] }>(`${API_BASE}/float`, {
-				headers: { Authorization: apiKey },
-			});
-			setFloat(data.tokens || []);
-			setCache(cacheKey, data.tokens || []);
-			setFloatMessage("Fetched token balances successfully.");
-			return data.tokens || [];
-		} catch (err: any) {
-			setFloatError("Failed to fetch token balances.");
-			console.error("Failed to fetch token balances:", err);
-		} finally {
-			setLoadingFloat(false);
-		}
+				// If cached data is available, use it
+				const cached = getCache(cacheKey);
+				if (cached) {
+					setFloat(cached);
+					setLoadingFloat(false);
+					return cached;
+				}
 
-		return [];
-	}, [apiKey, getCache, setCache]);
+				const { data } = await axios.get<{ tokens: iUserTokenBalance[] }>(
+					`${API_BASE}/float`,
+					{
+						headers: { Authorization: `Bearer ${apiKey}` },
+					},
+				);
+				setFloat(data.tokens || []);
+				setCache(cacheKey, data.tokens || []);
+				setFloatMessage("Fetched token balances successfully.");
+				return data.tokens || [];
+			} catch (err: any) {
+				setFloatError("Failed to fetch token balances.");
+				console.error("Failed to fetch token balances:", err);
+			} finally {
+				setLoadingFloat(false);
+			}
+
+			return [];
+		},
+		[apiKey, getCache, setCache, purgeCache],
+	);
 
 	// Enable gas
 	const enableBusinessGas = useCallback(async () => {
@@ -183,7 +192,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 			const { data } = await axios.post(
 				`${API_BASE}/enable-gas`,
 				{},
-				{ headers: { Authorization: apiKey } },
+				{ headers: { Authorization: `Bearer ${apiKey}` } },
 			);
 			setGasMessage("Gas allocation successful.");
 			return data;
@@ -205,7 +214,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 				await axios.post(
 					`${API_BASE}/activate-pay/${userId}`,
 					{},
-					{ headers: { Authorization: apiKey } },
+					{ headers: { Authorization: `Bearer ${apiKey}` } },
 				);
 				setUserGasMessage("Gas payment activated successfully for user.");
 			} catch (err: any) {
@@ -234,7 +243,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 				{
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: apiKey,
+						Authorization: `Bearer ${apiKey}`,
 					},
 				},
 			);
@@ -274,7 +283,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 				const { data } = await axios.get<iPendingTxResponse>(
 					`${API_BASE}/transactions/pending?page=${page}&pageSize=${pageSize}`,
 					{
-						headers: { Authorization: apiKey },
+						headers: { Authorization: `Bearer ${apiKey}` },
 					},
 				);
 				setPendingTx(data.transactions);
