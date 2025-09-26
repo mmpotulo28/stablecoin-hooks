@@ -1,41 +1,39 @@
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-            - name: Prebuild version bump
-              run: node scripts/prebuild-version-bump.js
-            - run: npm ci
-            - name: Build Dist
-              run: npm run build
-            - name: Upload dist folder
-              uses: actions/upload-artifact@v4
-              with:
-                  name: dist
-                  path: dist/
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Build Dist
+        run: npm run build
+      - name: Upload dist folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
-    publish-npm:
-        needs: build
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-                  registry-url: https://registry.npmjs.org/
-            - name: Download dist folder
-              uses: actions/download-artifact@v4
-              with:
-                  name: dist
-                  path: dist/
-            - run: npm publish --access public
-              env:
-                  NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - name: Download dist folder
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - run: npm run release
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
